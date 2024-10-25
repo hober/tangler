@@ -1,0 +1,18 @@
+/* tangle.css - Tangler, a tool for literate programming
+ *
+ * Copyright © 2024  Theresa O'Connor <tess@oconnor.cx>
+ */
+figure.chunk > figcaption { margin-block-end: 0; }
+figure.chunk > pre      { margin-block-start: 0; }
+figure.chunk > figcaption {
+    text-align: left;
+    text-indent: -0.5ic;
+}
+figure.chunk > pre {
+    margin-inline: 1ic;
+}
+figure.chunk > figcaption::before { content: "⟪"; }
+figure.chunk > figcaption::after { content: "⟫≔"; }
+a.chunk::before { content: "⟪"; }
+a.chunk::after { content: "⟫"; }
+

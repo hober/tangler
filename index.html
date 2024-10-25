@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<link rel=stylesheet href=bootstrap/tangle.css>
+<style>
+  abbr {
+    text-decoration: none;
+  }
+
+  html {
+    margin: 0;
+    padding: 0;
+    --bg-color: white;
+    --fg-color: black;
+    --link-color: blue;
+    --visited-color: rebeccapurple;
+    --example-color: #fcfaee;
+    background-color: var(--bg-color);
+    color: var(--fg-color);
+    font-family: system-ui, Arial, sans-serif;
+    font-size-adjust: from-font;
+    text-underline-position: from-font right;
+  }
+
+  h1, h2, h3, figcaption {
+    font-family: ui-rounded, system-ui, Arial, sans-serif;
+  }
+
+  code, pre {
+    font-family: ui-monospace, "Cascadia Code", monospace;
+  }
+
+  pre {
+    font-size: 0.875em;
+    white-space: pre-wrap;
+  }
+
+  :link { color: var(--link-color); }
+  :visited { color: var(--visited-color); }
+
+  @media (prefers-color-scheme: dark) {
+    html {
+      --bg-color: black;
+      --fg-color: white;
+      --link-color: yellow;
+      --visited-color: gold;
+      --example-color: #222;
+    }
+  }
+
+  @media screen {
+    html {
+      font-size: 150%;
+    }
+  }
+
+  @media print {
+    html {
+      --bg-color: white;
+      --fg-color: black;
+      --link-color: inherit;
+      --visited-color: inherit;
+      --example-color: inherit;
+    }
+  }
+
+  body {
+    max-width: 40ic;
+    margin-block: 0;
+    margin-inline: auto;
+    padding-inline: 1ic;
+  }
+
+  #skipnav {
+    display: block;
+    position: absolute;
+    inset-block-start: -2em;
+  }
+
+  #skipnav:focus {
+    position: static;
+    inset-block-start: auto;
+  }
+
+  cite, dfn {
+    font-style: normal;
+  }
+
+  dfn {
+    font-weight: bold;
+  }
+
+  figure > blockquote + figcaption {
+    text-align: right;
+  }
+
+  .tex, .tex sub {
+    font-size: 1em;
+  }
+
+  .tex sub {
+    text-transform: uppercase;
+    vertical-align: -0.5ex;
+    margin-inline-start: -0.1667em;
+    margin-inline-end: -0.125em;
+  }
+
+  .tex:link {
+    text-decoration: none;
+  }
+
+  html {
+    counter-reset: example;
+  }
+  figure.example {
+    padding-block: 0.5ic;
+    counter-increment: example;
+    background-color: var(--example-color);
+  }
+  figure.example > figcaption {
+    text-align: center;
+    margin-block-end: 0.5ic;
+  }
+  figure.example > figcaption::before {
+    content: "Example " counter(example) ": ";
+    font-weight: bold;
+  }
+  figure.example > pre {
+    margin: 0;
+    padding-block: 0;
+    padding-inline: 1ic;
+  }
+
+  figure.chunk > figcaption {
+    font-weight: bold;
+  }
+</style>
+<script src=bootstrap/tangle.js></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const files = [{
+      filename: "tangle.js",
+      mediaType: "text/javascript"
+    }, {
+      filename: "tangle.css",
+      mediaType: "text/css"
+    }, {
+      filename: "tangler.el",
+      mediaType: "text/elisp"
+    }];
+
+    const list = document.createElement("ul");
+    document.querySelector("h2:last-of-type + p").after(list);
+
+    for (const file of files) {
+      const li = document.createElement("li");
+      list.appendChild(li);
+      li.appendChild(Tangler.createChunkDownloadLink(
+        document.getElementById(file.filename), file.filename, file.mediaType));
+    }
+  });
+</script>
+<header>
+<h1>Tangler: literate programming in <abbr
+  title="Hypertext Markup Language">HTML</abbr></h1>
+</header>
+
+<main id=main>
+<figure>
+<blockquote cite=https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-7.html>
+<p>Programs must be written for people to read, and only incidentally for machines to execute.
+</blockquote>
+<figcaption>— <a href=https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-7.html>the preface to <cite>Structure and Interpretation of Computer Programs</cite></a></figcaption>
+</figure>
+
+<h2>Table of Contents</h2>
+
+<ol>
+  <li><a href=#intro>Introduction</a>
+  <li><a href=#authoring>Authoring Tangler documents</a><ol>
+    <li><a href=#chunks>Chunks: named code blocks</a>
+    <li><a href=#emacs>Editor support: Emacs</a></ol>
+  <li><a href=#how>How it works</a><ol>
+    <li><a href=#algorithm>Tangling text</a>
+    <li><a href=#links>Making links to tangled files</a>
+    <li><a href=#styling>Styling chunks</a>
+    <li><a href=#utils>Utilities</a>
+    <li><a href=#nodejs>Tangler works inside <code>Node.js</code> too</a></ol>
+  <li><a href=#download>Download Tangler</a>
+</ol>
+
+<h2 id=intro>1. Introduction</h2>
+
+<p>The source code of programs needs to be written in a certain order, so that the compiler or interpreter will do what the programmer intended. That order is probably not the most natural order a person might put the code in, especially if they were trying to organize it in a way most conducive to being read and comprehended other people. <a href=https://en.wikipedia.org/wiki/Literate_programming>According to <cite>Wikipedia</cite></a>,
+
+<blockquote cite=https://en.wikipedia.org/wiki/Literate_programming>
+<p><dfn>Literate programming</dfn> is a programming paradigm[…] in which a computer program is given as an explanation of how it works in a natural language, such as English, interspersed (embedded) with snippets of[…] source code, from which compilable source code can be generated.[…]
+<p>The literate programming paradigm[…] represents a move away from writing computer programs in the manner[…] imposed by the compiler, and instead gives programmers [the ability] to develop programs in the order demanded by the logic and flow of their thoughts.[…]
+<p>Literate programming (<abbr title="literate programming">LP</abbr>) tools are used to obtain two representations from a source file: one understandable by a compiler or interpreter, the "<dfn>tangled</dfn>" code, and another for viewing as formatted documentation, which is said to be "<dfn>woven</dfn>" from the literate source.
+</blockquote>
+
+<p><a href=https://en.wikipedia.org/wiki/Donald_Knuth><abbr title=Donald>Don</abbr> Knuth</a>’s original literate programming tool, <a href=https://en.wikipedia.org/wiki/Web_(programming_system)>WEB</a>, weaved <a href=https://en.wikipedia.org/wiki/TeX class=tex>T<sub>e</sub>X</a> documents out of literate source files, and many, maybe even most, <abbr>LP</abbr> tools written since have bias toward using <span class=tex>T<sub>e</sub>X</span> as the output format. But as <a href=https://en.wikipedia.org/wiki/Mark_Pilgrim>Mark Pilgrim</a> <a href=https://web.archive.org/web/20090330060533/http://diveintomark.org/archives/2009/03/27/dive-into-history-2009-edition>wrote</a> many years ago, <q cite=https://web.archive.org/web/20090330060533/http://diveintomark.org/archives/2009/03/27/dive-into-history-2009-edition><strong><abbr>HTML</abbr> is not an output format.</strong> <abbr>HTML</abbr> is <em>The Format</em>.</q> So I decided to have a go at writing a literate programming tool whose input documents are simply <abbr>HTML</abbr>.
+
+<h2 id=authoring>2. Authoring Tangler documents</h2>
+
+<p>Tangler documents are just <abbr>HTML</abbr>. It’s called Tangler because there’s no need to weave anything: the document is already woven.
+
+<h3 id=chunks>2.1. Chunks: named code blocks</h3>
+
+<p>Here’s an example of a chunk. This chunk contains one line of JavaScript which defines a <code>Tangler</code> global object.
+
+<figure class=chunk id=tangler-global>
+<figcaption>Define the Tangler global</figcaption>
+<pre><code>globalThis<wbr>.Tangler = {};</code></pre>
+</figure>
+
+<p>Each chunk has a name and a block of code. The <code>&lt;figure></code> element is the most natural way in <abbr>HTML</abbr> to associate a name with a bit of markup, and <code>&lt;pre>&lt;code>…&lt;/code>&lt;/pre></code> is the usual markup pattern for code blocks.
+
+<p>So here’s what the source code of that chunk looks like:
+
+<figure class=example>
+<figcaption>How to mark up a chunk</figcaption>
+<pre><code>&lt;figure class=chunk id=tangler-global>
+&lt;figcaption>Define the Tangler global&lt;/figcaption>
+&lt;pre>&lt;code>globalThis.Tangler = {};&lt;/code>&lt;/pre>
+&lt;/figure></code></pre>
+</figure>
+
+<p>Chunks can refer to other chunks; this is how Tangler knows how to tangle them together. The most obvious way in <abbr>HTML</abbr> to refer to another part of a document is the humble link, the <code>&lt;a></code> element.
+
+<p>For instance, here’s a chunk that pulls in two other chunks:
+
+<figure class=chunk id=put-funky-brackets-around-chunk-names>
+<figcaption>Put funky brackets around chunk names</figcaption>
+<pre><code><a class=chunk href=#style-chunk-names>Style chunk names</a>
+<a class=chunk href=#style-chunk-xrefs>Style chunk references</a></code></pre>
+</figure>
+
+<p>And here’s what the markup for that looks like:
+
+<figure class=example>
+<figcaption>Including other chunks within a chunk</figcaption>
+<pre><code>&lt;figure class=chunk id=put-funky-brackets-around-chunk-names>
+&lt;figcaption>Put funky brackets around chunk names&lt;/figcaption>
+&lt;pre>&lt;code>
+  &lt;a class=chunk href=#style-chunk-names>Style chunk names&lt;/a>
+  &lt;a class=chunk href=#style-chunk-xrefs>Style chunk references&lt;/a>
+&lt;/code>&lt;/pre>
+&lt;/figure></code></pre>
+</figure>
+
+<h3 id=emacs>2.2. Editor support: Emacs</h3>
+
+<p>I write <abbr>HTML</abbr> in Emacs, and it’d be nice if I didn’t have to laboriously type out these chunk <code>&lt;figure></code>s by hand each time. Here’s how to define a <a href=https://www.gnu.org/software/emacs/manual/html_node/autotype/Skeleton-Language.html>skeleton</a>, <code>tangler-insert-chunk</code>, that takes care of the boilerplate for you.
+
+<figure class=chunk id=tangler-insert-chunk>
+<figcaption>Skeleton for writing chunks</figcaption>
+<pre><code>(define-skeleton tangler-insert-chunk
+  "Insert a new chunk."
+  "Name of chunk: "
+  "&lt;figure class=chunk id="
+  (skeleton-read "ID of chunk: " nil nil)
+  ">" "\n"
+  "&lt;figcaption>"
+  str
+  "&lt;/figcaption>" "\n"
+  "&lt;pre>&lt;code>" "\n"
+  _ "\n"
+  "&lt;/code>&lt;/pre>" "\n"
+  "&lt;/figure>" "\n")</code></pre>
+</figure>
+
+<h2 id=how>3. How it works</h2>
+
+<h3 id=algorithm>3.1. Tangling text</h3>
+
+<p>The main entry point to the program is <a href=#tangler-tangle><code>Tangler<wbr>.tangle()</code></a>, which tangles the chunk passed to it at the given indent depth.
+
+<p>As we process the chunk, we store our in-progress tangle in <code><var>tangled</var></code>.
+
+<figure class=chunk id=tangler-tangle>
+<figcaption><code>Tangler<wbr>.tangle()</code></figcaption>
+<pre><code>Tangler<wbr>.tangle = function(chunk, indent = 0) {
+    let <var>tangled</var> = "";
+    <a class=chunk href=#tangle-a-chunk>Tangle a chunk</a>
+    return tangled;
+}</code></pre>
+</figure>
+
+<p>Implementing a tangler that operates on the <abbr title="Document Object Model">DOM</abbr> is surprisingly straightforward. It boils down to a simple tree walk. You look for references to other chunks, and if you find any, you recurse. Otherwise, you simply collect the text of the chunk and indent it.
+
+<figure class=chunk id=tangle-a-chunk>
+<figcaption>Tangle a chunk</figcaption>
+<pre><code><a class=chunk href=#indent-prefix>Create a string of whitespace for indentation</a>
+<a class=chunk href=#declare-text>Create a place to accumulate unindented text</a>
+<a class=chunk href=#declare-xref>Remember the &lt;a class=chunk> we’re in, if any</a>
+const walker = document<wbr>.create<wbr>Tree<wbr>Walker(
+    chunk<wbr>.query<wbr>Selector("pre"));
+while (walker<wbr>.next<wbr>Node()) {
+    switch (walker<wbr>.current<wbr>Node<wbr>.node<wbr>Type) {
+    case Node<wbr>.ELEMENT_NODE:
+        <a class=chunk href=#ignore-most-elements>Ignore most elements</a>
+        <a class=chunk href=#process-an-element-node>Process a chunk reference</a>
+        break;
+    case Node<wbr>.TEXT<wbr>_NODE:
+        <a class=chunk href=#ignore-xref-text>Ignore text inside <code>&lt;a class=chunk></code></a>
+        <a class=chunk href=#accumulate-text>accumulate text for indentation</a>
+        break;
+    default:
+        break;
+    }
+}
+<a class=chunk href=#indent-remaining-text>Indent remaining text</a></code></pre>
+</figure>
+
+<p>While we walk the tree, we really only care about text nodes and <code>&lt;a class=chunk></code> elements. If we encounter any other kind of element, we can ignore it.
+
+<figure class=chunk id=ignore-most-elements>
+<figcaption>Ignore most elements</figcaption>
+<pre><code>if (walker<wbr>.current<wbr>Node<wbr>.local<wbr>Name != "a")
+    continue;
+if (!walker<wbr>.current<wbr>Node<wbr>.class<wbr>List<wbr>.contains("chunk"))
+    continue;</code></pre>
+</figure>
+
+<p>Let’s cover the processing of text nodes. For the most part, we just accumulate unindented text into <code><var>text</var></code>:
+
+<figure class=chunk id=declare-text>
+<figcaption>Create a place to accumulate unindented text</figcaption>
+<pre><code>let <var>text</var> = "";</code></pre>
+</figure>
+
+<figure class=chunk id=accumulate-text>
+<figcaption>accumulate text for indentation</figcaption>
+<pre><code>text += walker<wbr>.current<wbr>Node<wbr>.data;</code></pre>
+</figure>
+
+<p>But we have to make sure we ignore any text inside <code>&lt;a class=chunk></code> links. If we’re inside one, we remember it in <code><var>xref</var></code>:
+
+<figure class=chunk id=declare-xref>
+<figcaption>Remember the &lt;a class=chunk> we’re in, if any</figcaption>
+<pre><code>let <var>xref</var> = null;</code></pre>
+</figure>
+
+<figure class=chunk id=store-xref>
+<figcaption>Remember this <code>&lt;a class=chunk></code> while we process it</figcaption>
+<pre><code>xref = walker<wbr>.current<wbr>Node;</code></pre>
+</figure>
+
+<p>And then we don’t bother to accumulate text if <code><var>xref</var></code> is set:
+
+<figure class=chunk id=ignore-xref-text>
+<figcaption>Ignore text inside <code>&lt;a class=chunk></code></figcaption>
+<pre><code>if (xref && is<wbr>Ancestor(walker<wbr>.current<wbr>Node, xref))
+    continue;
+else if (xref) // We’re no longer inside xref, so forget it
+    xref = null;</code></pre>
+</figure>
+
+<p>Next, let’s go over what we do when we encounter a reference to another chunk (an <code>&lt;a class=chunk></code> element). There are three steps, the first of which we’ve already seen:
+
+<figure class=chunk id=process-an-element-node>
+<figcaption>Process a chunk reference</figcaption>
+<pre><code><a class=chunk href=#store-xref>Remember this &lt;a class=chunk> while we process it</a>
+<a class=chunk href=#indent-accumulated-text>Indent the text we’ve accumulated thus far</a>
+<a class=chunk href=#recurse>Recurse with a new indent length</a></code></pre>
+</figure>
+
+<p>The second step is to indent all of the text that we’ve accumulated so far. We remember the lines of text in <code><var>lines</var></code> because we’ll need to use them later to compute a new indent length.
+
+<figure class=chunk id=indent-accumulated-text>
+<figcaption>Indent the text we’ve accumulated thus far</figcaption>
+<pre><code>const lines = text<wbr>.split("\n");
+tangled += lines<wbr>.join(prefix);
+text = "";</code></pre>
+</figure>
+
+<p>Next,we compute a new indent length and recurse, tangling the chunk that’s referred to by this <code>&lt;a class=chunk></code>.
+
+<figure class=chunk id=recurse>
+<figcaption>Recurse with a new indent length</figcaption>
+<pre><code>const last = lines[lines<wbr>.length - 1];
+tangled += Tangler<wbr>.tangle(
+    document<wbr>.query<wbr>Selector(
+        walker<wbr>.current<wbr>Node<wbr>.get<wbr>Attribute("href")),
+    indent + last<wbr>.length);</code></pre>
+</figure>
+
+<p>Finally, when the entire tree walk is done, we indent whatever text we have left over (after the last <code>&lt;a class=chunk></code> link).
+
+<figure class=chunk id=indent-remaining-text>
+<figcaption>Indent remaining text</figcaption>
+<pre><code>tangled += text<wbr>.split("\n")<wbr>.join(prefix);</code></pre>
+</figure>
+
+<h3 id=links>3.2. Making links to tangled files</h3>
+
+<p>When you put a Tangler document up on the web, it’s nice to provide links to the tangled source files embedded in the document.
+
+<p>The easiest thing to do is to construct a <a href=https://developer.mozilla.org/en-US/docs/Web/URI/Schemes/data>Data <abbr title="Uniform Resource Locator">URL</abbr></a> to the tangled source. You’ll need to know the chunk to tangle, and the <a href=https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types>media type</a> of the tangled document.
+
+<figure class=chunk id=create-a-data-url>
+<figcaption>Create a <code>data</code> <abbr>URL</abbr> to a chunk</figcaption>
+<pre><code>`data:${mediaType};charset=utf-8,${
+    encode<wbr>URI<wbr>Component(Tangler<wbr>.tangle(chunk))
+}`;</code></pre>
+</figure>
+
+<p><a class=chunk href=#tangler-create-link><code>Tangler<wbr>.create<wbr>Chunk<wbr>Download<wbr>Link()</code></a> is a helper method which can do this for you. You give it a chunk, a filename for the tangled document, and a media type, and it returns an <code>&lt;a></code> element you can stick in your <abbr>DOM</abbr> somewhere.
+
+<figure class=chunk id=tangler-create-link>
+<figcaption><code>Tangler<wbr>.create<wbr>Chunk<wbr>Download<wbr>Link()</code></figcaption>
+<pre><code>Tangler<wbr>.create<wbr>Chunk<wbr>Download<wbr>Link = function(chunk, filename, mediaType) {
+    const link = document<wbr>.create<wbr>Element("a");
+    link<wbr>.download = filename;
+    link<wbr>.href = <a class=chunk href=#create-a-data-url>Create a <code>data</code> <abbr>URL</abbr> to a chunk</a>
+    let filename_el = document<wbr>.create<wbr>Element("code");
+    filename_el<wbr>.append<wbr>Child(document<wbr>.create<wbr>Text<wbr>Node(filename));
+    link<wbr>.append<wbr>Child(document<wbr>.create<wbr>Text<wbr>Node("Download "));
+    link<wbr>.append<wbr>Child(filename_el);
+    link<wbr>.append<wbr>Child(document<wbr>.create<wbr>Text<wbr>Node("."));
+    return link;
+}</code></pre>
+</figure>
+
+<h3 id=styling>3.3. Styling chunks</h3>
+
+<p>Besides providing a script that tangles documents, Tangler also includes a minimal stylesheet that makes chunks and chunk references look kind of like they do in <a href=https://www.cs.tufts.edu/~nr/noweb/><code>noweb</code></a>, the literate programming tool I’ve used the most over the years.
+
+<figure class=chunk id=tangle.css>
+<figcaption><code>tangle<wbr>.css</code></figcaption>
+<pre><code>/* tangle.css - Tangler, a tool for literate programming
+ *
+ * <a class=chunk href=#copyright>Copyright</a>
+ */
+<a class=chunk href=#tighten-chunk-spacing>Tighten chunk spacing</a>
+<a class=chunk href=#style-chunks>Style chunks</a>
+<a class=chunk href=#put-funky-brackets-around-chunk-names>Put funky brackets around chunk names</a>
+</code></pre>
+</figure>
+
+<p>Chunk names get bracketed with U+27EA (⟪) MATHEMATICAL LEFT DOUBLE
+ANGLE BRACKET and U+27EB (⟫) MATHEMATICAL RIGHT DOUBLE ANGLE BRACKET.
+
+<figure class=chunk id=style-chunk-xrefs>
+<figcaption>Style chunk references</figcaption>
+<pre><code>a<wbr>.chunk<wbr>::before { content: "⟪"; }
+a<wbr>.chunk<wbr>::after { content: "⟫"; }</code></pre>
+</figure>
+
+<p>Where chunks are defined, their names are followed by U+2254 (≔) COLON
+EQUALS.
+
+<figure class=chunk id=style-chunk-names>
+<figcaption>Style chunk names</figcaption>
+<pre><code>figure<wbr>.chunk > figcaption<wbr>::before { content: "⟪"; }
+figure<wbr>.chunk > figcaption<wbr>::after { content: "⟫≔"; }</code></pre>
+</figure>
+
+<p>I don’t want there to be any space between the chunk name and its body. So we remove any margin that might cause there to be space.
+
+<figure class=chunk id=tighten-chunk-spacing>
+<figcaption>Tighten chunk spacing</figcaption>
+<pre><code>figure<wbr>.chunk > figcaption { margin-block-end: 0; }
+figure<wbr>.chunk > pre      { margin-block-start: 0; }</code></pre>
+</figure>
+
+<p>Chunk names should be left-aligned. The bodies of chunks should be set in slightly from the chunk name, which should hang a bit left of the main text flow.
+
+<figure class=chunk id=style-chunks>
+<figcaption>Style chunks</figcaption>
+<pre><code>figure<wbr>.chunk > figcaption {
+    text-align: left;
+    text-indent: -0.5ic;
+}
+figure<wbr>.chunk > pre {
+    margin-inline: 1ic;
+}</code></pre>
+</figure>
+
+<h3 id=utils>3.4. Utilities</h3>
+
+<p>Python uses the multiplication operator to quickly create repetitive strings: <code>'foo'*3</code> returns <code>'foofoofoo'</code>. This is super useful for creating runs of whitespace, which a tangler needs to do to get indentation right. Unfortunately, JavaScript’s <code>*</code> operator doesn’t work on strings this way.
+
+<figure class=chunk id=spaces>
+<figcaption><code>spaces()</code></figcaption>
+<pre><code>function spaces(length) {
+    return Array(length)<wbr>.fill(" ")<wbr>.join("");
+}</code></pre>
+</figure>
+
+<p>This is how we use it in <a class=chunk href=#tangler-tangle><code>Tangler<wbr>.tangle()</code></a>:
+
+<figure class=chunk id=indent-prefix>
+<figcaption>Create a string of whitespace for indentation</figcaption>
+<pre><code>const <var>prefix</var> = "\n" + spaces(indent);</code></pre>
+</figure>
+
+<p>Here’a a function to test if a <abbr>DOM</abbr> element is an ancestor of a node. I originally implemented this by walking up <code>node<wbr>.<a href=https://developer.mozilla.org/en-US/docs/Web/API/Node/parentElement>parent<wbr>Element</a></code> looking for the possible ancestor, because I always forget that <code>node<wbr>.<a href=https://developer.mozilla.org/en-US/docs/Web/API/Node/compareDocumentPosition>compare<wbr>Document<wbr>Position</a>()</code> exists.
+
+<figure class=chunk id=is-ancestor>
+<figcaption><code>is<wbr>Ancestor()</code></figcaption>
+<pre><code>function is<wbr>Ancestor(node, possible<wbr>Ancestor) {
+    return Node<wbr>.<a href=https://dom.spec.whatwg.org/#ref-for-dom-node-document_position_contains>DOCUMENT_POSITION_CONTAINS</a> &
+        node<wbr>.compare<wbr>Document<wbr>Position(possible<wbr>Ancestor);
+}</code></pre>
+</figure>
+
+<h3 id=nodejs>3.5. Tangler works inside <code>Node.js</code> too</h3>
+
+<p>It’d be nice if this thing worked from the command line, and not just from inside a browser. Fortunately <a href=https://github.com/jsdom/jsdom><code>jsdom</code></a> makes that a breeze.
+
+<p>Parsing an <abbr>HTML</abbr> file with <code>jsdom</code> is really easy.
+
+<figure class=chunk id=parse-the-file>
+<figcaption>Parse the file wtih <code>jsdom</code></figcaption>
+<pre><code>const { JSDOM } = require("jsdom");
+const html = require('fs').readFileSync(process.argv[2], 'utf-8');
+const dom = new JSDOM(html);</code></pre>
+</figure>
+
+<p>The rest of Tangler’s code assumes it’s running in a browser. Now that we’ve parsed the <abbr>HTML</abbr> document, we can trick the rest of the script into thinking that’s the case, even though we’re in <code>Node.js</code>.
+
+<p>The only global objects the rest of the script relies on are <a href=https://dom.spec.whatwg.org/#interface-node><code>window.Node</code></a> and <a href=https://dom.spec.whatwg.org/#interface-document><code>window.document</code></a>, so we put references to them on <code>globalThis</code>.
+
+<figure class=chunk id=populate-global>
+<figcaption>Trick the rest of the file into thinking we’re in a browser</figcaption>
+<pre><code>globalThis.Node = dom.window.Node;
+globalThis.document = dom.window.document;</code></pre>
+</figure>
+
+<p>All that’s left to do is to tangle the requested chunk and print it to <code><abbr title="standard output">stdout</abbr></code>:
+
+<figure class=chunk id=stdout>
+<figcaption>Print the tangled source code to <code><abbr>stdout</abbr></code></figcaption>
+<pre><code>console.log(
+    Tangler.tangle(document.getElementById(process.argv[3])));</code></pre>
+</figure>
+
+<p>Some of this trickery has to happen before the rest of the script loads. In order to run some code only in <code>Node.js</code>, we look for <a href=https://nodejs.org/api/modules.html#requireid><code>globalThis.require</code></a>, which is defined in <code>Node.js</code> but isn’t part of the web platform.
+
+<figure class=chunk id=nodejs-preamble>
+<figcaption><code>Node.js</code> preamble</figcaption>
+<pre><code>if ('require' in globalThis) {
+    <a class=chunk href=#count-args>Bail if there aren’t enough command line arguments</a>
+    <a class=chunk href=#parse-the-file>Parse the file wtih <code>jsdom</code></a>
+    <a class=chunk href=#populate-global>Trick the rest of this script into thinking we’re in a browser</a>
+}</code></pre>
+</figure>
+
+<p>We can’t print the tangled source code to <code><abbr>stdout</abbr></code> until the methods of the <a href=#tangler-global>Tangler global</a> have been defined.
+
+<figure class=chunk id=nodejs-postamble>
+<figcaption><code>Node.js</code> postamble</figcaption>
+<pre><code>if ('require' in globalThis) {
+    <a class=chunk href=#stdout>Print the tangled source code to <code><abbr>stdout</abbr></code></a>
+}</code></pre>
+</figure>
+
+<p>If the user didn’t pass in enough arguments, we tell them how to call this script from the command line.
+
+<figure class=chunk id=count-args>
+<figcaption>Bail if there aren’t enough command line arguments</figcaption>
+<pre><code>if (process.argv.length &lt; 4) {
+    console.error(
+        "USAGE: node tangle.js tangler-filename chunk-id");
+    process.exit(1);
+}</code></pre>
+</figure>
+
+<h3 id=make>3.6 A Makefile to rule them all</h3>
+
+<figure class=chunk id=README.md>
+<figcaption>README.md</figcaption>
+<pre><code># Tangler
+
+Tangler is a literate programming tool whose input format is HTML.
+
+You can simply open [the HTML file](index.html) and click the download
+links, or you can use the provided Makefile. To extract the Makefile,
+run the following:
+
+    node - index.html Makefile &lt; bootstrap/tangle.js > Makefile
+
+After this, a simple `make` should do the right thing.</code></pre>
+</figure>
+
+<figure class=chunk id=Makefile>
+<figcaption>Makefile</figcaption>
+<pre><code># -*- makefile-gmake -*-
+
+.PHONY: all clean bootstrap
+
+PRODUCTS=tangle.js tangle.css tangler.el
+SOURCE=index.html
+
+all: $(PRODUCTS) Makefile README.md
+
+bootstrap: tangle.js tangle.css
+	cp tangle.js tangle.css bootstrap/
+
+clean:
+	rm -f $(PRODUCTS) *~
+
+tangle.js tangle.css tangler.el Makefile README.md: $(SOURCE)
+	node - $(SOURCE) $@ &lt; bootstrap/tangle.js > $@</code></pre>
+</figure>
+
+<h2 id=download>4. Download Tangler</h2>
+
+<p>I’m sure you’ve noticed by now that Tangler is self-hosted: this document describing how it works is also its source code. It contains four documents that can be extracted.
+
+<p>The script contains the definition of the <code>Tangler</code> global, the methods that hang off of it, and some <a href=#utils>utility functions</a>:
+
+<figure class=chunk id=tangle.js>
+<figcaption><code>tangle<wbr>.js</code></figcaption>
+<pre><code>/* tangle.js - Tangler, a tool for literate programming
+ *
+ * <a class=chunk href=#copyright>Copyright</a>
+ */
+(function() {
+    <a class=chunk href=#tangler-global>Define the Tangler global</a>
+    <a class=chunk href=#nodejs-preamble><code>Node.js</code> preamble</a>
+    <a class=chunk href=#is-ancestor>is<wbr>Ancestor()</a>
+    <a class=chunk href=#spaces>spaces()</a>
+    <a class=chunk href=#tangler-tangle>Tangler<wbr>.tangle()</a>
+    <a class=chunk href=#tangler-create-link>Tangler<wbr>.create<wbr>Chunk<wbr>Download<wbr>Link()</a>
+    <a class=chunk href=#nodejs-postamble><code>Node.js</code> postamble</a>
+})();
+</code></pre>
+</figure>
+
+<p>You can read about the stylesheet in <a href=#styling>§3.3. Styling chunks</a>.
+
+<p>In <a href=#emacs>§2.2. Editor support: Emacs</a> I define the <code>tangler-insert-chunk</code> skeleton. I’ve wrapped it into an <abbr title="Emacs Lisp">Elisp</abbr> library below:
+
+<figure class=chunk id=tangler.el>
+<figcaption><code>tangler.el</code></figcaption>
+<pre><code>;;; tangler.el --- Support for editing Tangler literate programs
+
+;; <a class=chunk href=#copyright>Copyright</a>
+
+;; Author: <a class=chunk href=#author>Author</a>
+;; Keywords: convenience, docs, hypermedia
+
+;;; Code:
+
+(require 'skeleton)
+
+<a class=chunk href=#tangler-insert-chunk>Skeleton for writing chunks</a>
+
+(provide 'tangler)
+;;; tangler.el ends here</code></pre>
+</figure>
+
+<p>All of the generated files should get the same copyright notice.
+
+<figure class=chunk id=author>
+<figcaption>Author</figcaption>
+<pre><code>Theresa O'Connor &lt;<a href=mailto:tess@oconnor.cx>tess@oconnor.cx</a>></code></pre>
+</figure>
+<figure class=chunk id=copyright>
+<figcaption>Copyright</figcaption>
+<pre><code>Copyright © 2024  <a class=chunk href=#author>Author</a></code></pre>
+</figure>
+</footer>
+</main>
+<footer>
+<hr>
+<p><q cite=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>By the way, it’s interesting to try "<code>while(1) ;  xeyes &amp; ; end</code>".</q> — <a href=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>Knuth’s <code>.fvwm2rc</code></a></footer>
