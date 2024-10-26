@@ -1,0 +1,131 @@
+abbr {
+    text-decoration: none;
+}
+
+html {
+    margin: 0;
+    padding: 0;
+    --bg-color: white;
+    --fg-color: black;
+    --link-color: blue;
+    --visited-color: rebeccapurple;
+    --example-color: #fcfaee;
+    background-color: var(--bg-color);
+    color: var(--fg-color);
+    font-family: system-ui, Arial, sans-serif;
+    font-size-adjust: from-font;
+    text-underline-position: from-font right;
+}
+
+h1, h2, h3, figcaption {
+    font-family: ui-rounded, system-ui, Arial, sans-serif;
+}
+
+code, pre {
+    font-family: ui-monospace, "Cascadia Code", monospace;
+}
+
+pre {
+    font-size: 0.875em;
+    white-space: pre-wrap;
+}
+
+:link { color: var(--link-color); }
+:visited { color: var(--visited-color); }
+
+@media (prefers-color-scheme: dark) {
+    html {
+        --bg-color: black;
+        --fg-color: white;
+        --link-color: yellow;
+        --visited-color: gold;
+        --example-color: #222;
+    }
+}
+
+@media screen {
+    html {
+        font-size: 150%;
+    }
+}
+
+@media print {
+    html {
+        --bg-color: white;
+        --fg-color: black;
+        --link-color: inherit;
+        --visited-color: inherit;
+        --example-color: inherit;
+    }
+}
+
+body {
+    max-width: 40ic;
+    margin-block: 0;
+    margin-inline: auto;
+    padding-inline: 1ic;
+}
+
+#skipnav {
+    display: block;
+    position: absolute;
+    inset-block-start: -2em;
+}
+
+#skipnav:focus {
+    position: static;
+    inset-block-start: auto;
+}
+
+cite, dfn {
+    font-style: normal;
+}
+
+dfn {
+    font-weight: bold;
+}
+
+figure > blockquote + figcaption {
+    text-align: right;
+}
+
+.tex, .tex sub {
+    font-size: 1em;
+}
+
+.tex sub {
+    text-transform: uppercase;
+    vertical-align: -0.5ex;
+    margin-inline-start: -0.1667em;
+    margin-inline-end: -0.125em;
+}
+
+.tex:link {
+    text-decoration: none;
+}
+
+html {
+    counter-reset: example;
+}
+figure.example {
+    padding-block: 0.5ic;
+    counter-increment: example;
+    background-color: var(--example-color);
+}
+figure.example > figcaption {
+    text-align: center;
+    margin-block-end: 0.5ic;
+}
+figure.example > figcaption::before {
+    content: "Example " counter(example) ": ";
+    font-weight: bold;
+}
+figure.example > pre {
+    margin: 0;
+    padding-block: 0;
+    padding-inline: 1ic;
+}
+
+figure.chunk > figcaption {
+    font-weight: bold;
+}
