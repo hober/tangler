@@ -15,6 +15,7 @@ html {
     font-family: system-ui, Arial, sans-serif;
     font-size-adjust: from-font;
     text-underline-position: from-font right;
+    line-height: 1.5;
 }
 
 h1, h2, h3, figcaption {

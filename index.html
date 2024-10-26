@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <title>Tangler: literate programming in HTML</title>
+<meta name=viewport content="width=device-width">
 <link rel=stylesheet href=bootstrap/tangle.css>
 <link rel=stylesheet href=document.css>
 <script src=bootstrap/tangle.js></script>
@@ -488,7 +489,7 @@ globalThis.document = dom.window.document;</code></pre>
 <figure class=chunk id=stdout>
 <figcaption>Print the tangled source code to <code><abbr>stdout</abbr></code></figcaption>
 <pre><code>console.log(
-    Tangler.tangle(document.getElementById(process.argv[3])));</code></pre>
+    Tangler<wbr>.tangle(document<wbr>.get<wbr>Element<wbr>By<wbr>Id(process<wbr>.argv[3])));</code></pre>
 </figure>
 
 <p>Some of this trickery has to happen before the rest of the script loads. In order to run some code only in <code>Node.js</code>, we look for <a href=https://cli.org/api/modules.html#requireid><code>globalThis.require</code></a>, which is defined in <code>Node.js</code> but isn’t part of the web platform.
