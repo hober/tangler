@@ -95,7 +95,7 @@ title="Hypertext Markup Language">HTML</abbr></a></h1>
 <figcaption>Source code can contain <abbr>HTML</abbr> elements</figcaption>
 <pre><code>&lt;figure class=chunk id=tangler-global>
 &lt;figcaption>Define the Tangler global&lt;/figcaption>
-&lt;pre>&lt;code><mark>&lt;a href=https://developer<wbr>.mozilla<wbr>.org/<wbr>en-US/<wbr>docs/<wbr>Web/<wbr>Java<wbr>Script/<wbr>Reference/<wbr>Global_Objects/<wbr>globalThis></mark>globalThis<mark>&lt;/a></mark>.Tangler = {};&lt;/code>&lt;/pre>
+&lt;pre>&lt;code><mark>&lt;a href=https://developer<wbr>.mozilla<wbr>.org/<wbr>en-US/<wbr>docs/<wbr>Web/<wbr>Java<wbr>Script/<wbr>Reference/<wbr>Global_Objects/<wbr>globalThis<wbr>></mark>globalThis<mark>&lt;/a></mark><wbr>.Tangler = {};&lt;/code>&lt;/pre>
 &lt;/figure></code></pre>
 </figure>
 
@@ -289,7 +289,7 @@ tangled += Tangler<wbr>.tangle(
 
 <figure class=chunk id=create-a-data-url>
 <figcaption>Create a <code>data</code> <abbr>URL</abbr> to a chunk</figcaption>
-<pre><code>`data:${mediaType};charset=utf-8,${
+<pre><code>`data:${mediaType};<wbr>charset=utf-8,${
     encode<wbr>URI<wbr>Component(Tangler<wbr>.tangle(chunk))
 }`;</code></pre>
 </figure>
@@ -363,7 +363,7 @@ const <var>chunk<wbr>Name<wbr>Map</var> = new Map();
 
 for (const <var>chunk</var> of document<wbr>.query<wbr>Selector<wbr>All("figure.chunk")) {
     chunk<wbr>Name<wbr>Map<wbr>.set(
-        chunk<wbr>.query<wbr>Selector("figcaption").text<wbr>Content,
+        chunk<wbr>.query<wbr>Selector("figcaption")<wbr>.text<wbr>Content,
         chunk);
 }
 
@@ -465,7 +465,7 @@ figure<wbr>.chunk > pre {
 <figure class=chunk id=parse-the-file>
 <figcaption>Parse the file wtih <code>jsdom</code></figcaption>
 <pre><code>const { JSDOM } = require("jsdom");
-const html = require('fs').readFileSync(process.argv[2], 'utf-8');
+const html = require('fs')<wbr>.read<wbr>File<wbr>Sync(process<wbr>.argv[2], 'utf-8');
 const dom = new JSDOM(html);</code></pre>
 </figure>
 
@@ -531,7 +531,7 @@ globalThis.document = dom.window.document;</code></pre>
 
 Tangler is a literate programming tool whose input format is HTML.
 
-You can simply open [the HTML file](<a href=https://hober.github.io/tangler/>https://hober.github.io/tangler/</a>) and click the download links, or you can use the provided Makefile. To extract the Makefile, run the following:
+You can simply open [the HTML file](<a href=https://hober.github.io/tangler/>https://<wbr>hober<wbr>.github<wbr>.io/<wbr>tangler/</a>) and click the download links, or you can use the provided Makefile. To extract the Makefile, run the following:
 
     node - index.html Makefile &lt; bootstrap/tangle.js > Makefile
 
