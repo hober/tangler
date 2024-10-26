@@ -5,12 +5,15 @@
 <link rel=stylesheet href=document.css>
 <script src=bootstrap/tangle.js></script>
 <script src=document.js></script>
-<header>
-<h1>Tangler: literate programming in <abbr
-  title="Hypertext Markup Language">HTML</abbr></h1>
-</header>
-
 <article>
+<h1>Tangler: literate programming in <abbr
+    title="Hypertext Markup Language">HTML</abbr></h1>
+
+<figure class=chunk id=author>
+<figcaption>Author</figcaption>
+<pre><code><a href=https://tess.oconnor.cx/>Theresa O'Connor</a> &lt;<a href=mailto:tess@oconnor.cx>tess@oconnor.cx</a>></code></pre>
+</figure>
+
 <figure>
 <blockquote cite=https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-7.html>
 <p>Programs must be written for people to read, and only incidentally for machines to execute.
@@ -22,21 +25,26 @@
 
 <ol>
   <li><a href=#intro>Introduction</a>
-  <li><a href=#authoring>Authoring Tangler documents</a><ol>
-    <li><a href=#chunks>Chunks: named code blocks</a>
+  <li><a href=#authoring>Tangler documents</a><ol>
+    <li><a href=#chunks>Chunks are named code blocks</a>
+    <li><a href=#xrefs>xrefs: links to chunks</a>
+    <li><a href=#index-api>Adding a chunk index to your document</a>
     <li><a href=#emacs>Editor support: Emacs</a></ol>
   <li><a href=#how>How it works</a><ol>
     <li><a href=#algorithm>Tangling text</a>
     <li><a href=#links>Making links to tangled files</a>
+    <li><a href=#index-api-implementation><code>Tangler<wbr>.create<wbr>Chunk<wbr>Index()</code></li>
     <li><a href=#styling>Styling chunks</a>
     <li><a href=#utils>Utilities</a>
-    <li><a href=#nodejs>Tangler works inside <code>Node.js</code> too</a></ol>
+    <li><a href=#cli>Usage from the command line</a>
+    <li><a href=#make>A Makefile and a README</a></ol>
   <li><a href=#download>Download Tangler</a>
+  <li><a href=#chunk-index>Chunk index</a>
 </ol>
 
 <h2 id=intro>1. Introduction</h2>
 
-<p>The source code of programs needs to be written in a certain order, so that the compiler or interpreter will do what the programmer intended. That order is probably not the most natural order a person might put the code in, especially if they were trying to organize it in a way most conducive to being read and comprehended other people. <a href=https://en.wikipedia.org/wiki/Literate_programming>According to <cite>Wikipedia</cite></a>,
+<p>The source code of programs needs to be written in a certain order, so that the compiler or interpreter will do what the programmer intended. That order is probably not the most natural order a person might put the code in, especially if they were trying to organize it in a way most conducive to being read and comprehended other people. According to <a href=https://en.wikipedia.org/wiki/Literate_programming><cite>Wikipedia</cite></a>,
 
 <blockquote cite=https://en.wikipedia.org/wiki/Literate_programming>
 <p><dfn>Literate programming</dfn> is a programming paradigm[…] in which a computer program is given as an explanation of how it works in a natural language, such as English, interspersed (embedded) with snippets of[…] source code, from which compilable source code can be generated.[…]
@@ -46,34 +54,56 @@
 
 <p><a href=https://en.wikipedia.org/wiki/Donald_Knuth><abbr title=Donald>Don</abbr> Knuth</a>’s original literate programming tool, <a href=https://en.wikipedia.org/wiki/Web_(programming_system)>WEB</a>, weaved <a href=https://en.wikipedia.org/wiki/TeX class=tex>T<sub>e</sub>X</a> documents out of literate source files, and many, maybe even most, <abbr>LP</abbr> tools written since have bias toward using <span class=tex>T<sub>e</sub>X</span> as the output format. But as <a href=https://en.wikipedia.org/wiki/Mark_Pilgrim>Mark Pilgrim</a> <a href=https://web.archive.org/web/20090330060533/http://diveintomark.org/archives/2009/03/27/dive-into-history-2009-edition>wrote</a> many years ago, <q cite=https://web.archive.org/web/20090330060533/http://diveintomark.org/archives/2009/03/27/dive-into-history-2009-edition><strong><abbr>HTML</abbr> is not an output format.</strong> <abbr>HTML</abbr> is <em>The Format</em>.</q> So I decided to have a go at writing a literate programming tool whose input documents are simply <abbr>HTML</abbr>.
 
-<h2 id=authoring>2. Authoring Tangler documents</h2>
+<h2 id=authoring>2. Tangler documents</h2>
 
 <p>Tangler documents are just <abbr>HTML</abbr>. It’s called Tangler because there’s no need to weave anything: the document is already woven.
 
-<h3 id=chunks>2.1. Chunks: named code blocks</h3>
+<p>The two things that make an HTML document a Tangler document are <dfn>chunks</dfn> and chunk references (<dfn>xrefs</dfn>).
 
-<p>Here’s an example of a chunk. This chunk contains one line of JavaScript which defines a <code>Tangler</code> global object.
+<h3 id=chunks>2.1. Chunks are named code blocks</h3>
+
+<p>A chunk is just a piece of source code.
+
+<p>Here’s an example of one. This chunk contains one line of JavaScript which defines a <code>Tangler</code> global object.
 
 <figure class=chunk id=tangler-global>
 <figcaption>Define the Tangler global</figcaption>
-<pre><code>globalThis<wbr>.Tangler = {};</code></pre>
+<pre><code>globalThis.Tangler = {};</code></pre>
 </figure>
 
-<p>Each chunk has a name and a block of code. The <code>&lt;figure></code> element is the most natural way in <abbr>HTML</abbr> to associate a name with a bit of markup, and <code>&lt;pre>&lt;code>…&lt;/code>&lt;/pre></code> is the usual markup pattern for code blocks.
+<p>Each chunk has a name. <a href=https://html.spec.whatwg.org/multipage/grouping-content.html#the-figure-element>The <code>&lt;figure></code> element</a> is the most natural way in <abbr>HTML</abbr> to associate a name with a bit of markup, and <code>&lt;pre>&lt;code>…&lt;/code>&lt;/pre></code> is the usual markup pattern for code blocks.
 
 <p>So here’s what the source code of that chunk looks like:
 
 <figure class=example>
 <figcaption>How to mark up a chunk</figcaption>
-<pre><code>&lt;figure class=chunk id=tangler-global>
+<pre><code>&lt;figure <mark>class=chunk</mark> id=tangler-global>
 &lt;figcaption>Define the Tangler global&lt;/figcaption>
 &lt;pre>&lt;code>globalThis.Tangler = {};&lt;/code>&lt;/pre>
 &lt;/figure></code></pre>
 </figure>
 
-<p>Chunks can refer to other chunks; this is how Tangler knows how to tangle them together. The most obvious way in <abbr>HTML</abbr> to refer to another part of a document is the humble link, the <code>&lt;a></code> element.
+<p>The <code>&lt;figure></code> element has the <a href=https://dom.spec.whatwg.org/#dom-element-classlist>class</code></a> “<code>chunk</code>”, which is how Tangler knows it’s a chunk.
 
-<p>For instance, here’s a chunk that pulls in two other chunks:
+<p>Tangler only extracts the text when it extracts source code from a chunk. It ignores markup inside the chunk. So you’re free to mark things up inside the source when it makes sense to do so.
+
+<p>For instance, I could have linked <code>globalThis</code> to <a href=https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis>its <abbr title="Mozilla Developer Network">MDN</abbr> page</a> like so, and it wouldn’t effect what gets extracted:
+
+<figure class=example>
+<figcaption>Source code can contain <abbr>HTML</abbr> elements</figcaption>
+<pre><code>&lt;figure class=chunk id=tangler-global>
+&lt;figcaption>Define the Tangler global&lt;/figcaption>
+&lt;pre>&lt;code><mark>&lt;a href=https://developer<wbr>.mozilla<wbr>.org/<wbr>en-US/<wbr>docs/<wbr>Web/<wbr>Java<wbr>Script/<wbr>Reference/<wbr>Global_Objects/<wbr>globalThis></mark>globalThis<mark>&lt;/a></mark>.Tangler = {};&lt;/code>&lt;/pre>
+&lt;/figure></code></pre>
+</figure>
+
+<p>While this is pretty neat, it’s probably best to do this only sparingly. It can make maintaining the source more challenging. I tend to use <a href=https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-var-element>the <code>&lt;var></code> element</a> when I define variables, <a href=https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-wbr-element>the <code>&lt;wbr></code> element</a> to provide line-breaking opportunities the browser’s line layout algorithm misses, and I occasionally sprinkle in links when I use something that might be unfamiliar to the reader.
+
+<h3 id=xrefs>2.2. xrefs: links to chunks</h3>
+
+<p>Chunks can refer to other chunks; this is how Tangler knows how to tangle them together. A reference from one chunk to another is called an xref.
+
+<p>The most obvious way to refer to another part of a document in <abbr>HTML</abbr> is <a href=https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element>the <code>&lt;a></code> element</a>, of course. For instance, here’s a chunk that pulls in two other chunks:
 
 <figure class=chunk id=put-funky-brackets-around-chunk-names>
 <figcaption>Put funky brackets around chunk names</figcaption>
@@ -94,7 +124,18 @@
 &lt;/figure></code></pre>
 </figure>
 
-<h3 id=emacs>2.2. Editor support: Emacs</h3>
+<p><abbr lang=la title="nota bene">N.B.</abbr> xrefs refer to chunks by <code>id=""</code>, not by name. This is very natural in <abbr>HTML</abbr>, but might surprise you if you’ve used other literate programming tools before. In other tools, chunks are referenced by name. In these tools, multiple chunks with the same name get concatenated in document order to form a composite chunk. But in Tangler, we reference chunks by <code>id=""</code>, which are unique. No magical concatenation for you.
+
+<p>This is a limitation of using <code>id=""</code> attributes for linking to chunks, but this limitation is intentional. The small convenience of being able to break up chunks without naming the parts is outweighed, I think, by the advantage to authors, who can simply use the <abbr>HTML</abbr> mechanisms they’re already accustomed to, and to readers, who always know that they’re seeing the whole chunk when they are looking at a <code>&lt;figure class=chunk></code>. You can explicitly split a chunk up, but you have to make each piece a chunk in its own right.
+
+<h3 id=index-api>2.3. Adding a chunk index to your document</h3>
+
+<p>Once you’ve written a literate program of non-trivial length, an index to all of its chunks can be quite useful.
+
+<p>You can easily add a chunk index to your document by calling <a href=#tangler-create-index><code>Tangler<wbr>.create<wbr>Chunk<wbr>Index()</code></a>. The function returns a <a href=https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment><code>Document<wbr>Fragment</code></a> you can append wherever you’d like.
+
+
+<h3 id=emacs>2.4. Editor support: Emacs</h3>
 
 <p>I write <abbr>HTML</abbr> in Emacs, and it’d be nice if I didn’t have to laboriously type out these chunk <code>&lt;figure></code>s by hand each time. Here’s how to define a <a href=https://www.gnu.org/software/emacs/manual/html_node/autotype/Skeleton-Language.html>skeleton</a>, <code>tangler-insert-chunk</code>, that takes care of the boilerplate for you.
 
@@ -251,7 +292,7 @@ tangled += Tangler<wbr>.tangle(
 }`;</code></pre>
 </figure>
 
-<p><a class=chunk href=#tangler-create-link><code>Tangler<wbr>.create<wbr>Chunk<wbr>Download<wbr>Link()</code></a> is a helper method which can do this for you. You give it a chunk, a filename for the tangled document, and a media type, and it returns an <code>&lt;a></code> element you can stick in your <abbr>DOM</abbr> somewhere.
+<p><a href=#tangler-create-link><code>Tangler<wbr>.create<wbr>Chunk<wbr>Download<wbr>Link()</code></a> is a helper method which can do this for you. You give it a chunk, a filename for the tangled document, and a media type, and it returns an <code>&lt;a></code> element you can stick in your <abbr>DOM</abbr> somewhere.
 
 <figure class=chunk id=tangler-create-link>
 <figcaption><code>Tangler<wbr>.create<wbr>Chunk<wbr>Download<wbr>Link()</code></figcaption>
@@ -261,14 +302,76 @@ tangled += Tangler<wbr>.tangle(
     link<wbr>.href = <a class=chunk href=#create-a-data-url>Create a <code>data</code> <abbr>URL</abbr> to a chunk</a>
     let filename_el = document<wbr>.create<wbr>Element("code");
     filename_el<wbr>.append<wbr>Child(document<wbr>.create<wbr>Text<wbr>Node(filename));
-    link<wbr>.append<wbr>Child(document<wbr>.create<wbr>Text<wbr>Node("Download "));
     link<wbr>.append<wbr>Child(filename_el);
-    link<wbr>.append<wbr>Child(document<wbr>.create<wbr>Text<wbr>Node("."));
     return link;
 }</code></pre>
 </figure>
 
-<h3 id=styling>3.3. Styling chunks</h3>
+<h3 id=index-api-implementation>3.3. <code>Tangler<wbr>.create<wbr>Chunk<wbr>Index()</code></h3>
+
+<figure class=chunk id=tangler-create-index>
+<figcaption><code>Tangler<wbr>.create<wbr>Chunk<wbr>Index()</code></figcaption>
+<pre><code>Tangler<wbr>.create<wbr>Chunk<wbr>Index = function(id) {
+    const <var>index</var> = new Document<wbr>Fragment();
+
+    <a class=chunk href=#create-index-heading>Create index heading</a>
+    <a class=chunk href=#populate-index>Populate index</a>
+
+    return index;
+}</code></pre>
+</figure>
+
+<p>If you pass an ID to <code>create<wbr>Chunk<wbr>Index()</code>, it’ll place the ID on the heading of the index, so you can link to it from your Table of Contents.
+
+<figure class=chunk id=create-index-heading>
+<figcaption>Create index heading</figcaption>
+<pre><code>const <var>heading</var> = document<wbr>.create<wbr>Element("h2");
+if (id)
+    heading.id = id;
+index<wbr>.append<wbr>Child(heading);
+heading<wbr>.append<wbr>Child(document<wbr>.create<wbr>Text<wbr>Node("Chunk index"));</code></pre>
+</figure>
+
+<p>Adding each chunk to the index is relatively straightforward.
+
+<figure class=chunk id=add-chunk-to-index>
+<figcaption>Add chunk to index</figcaption>
+<pre><code>const <var>index<wbr>Entry</var> = document<wbr>.create<wbr>Element("li");
+chunk<wbr>List.append<wbr>Child(index<wbr>Entry);
+const <var>link</var> = document<wbr>.create<wbr>Element("a");
+index<wbr>Entry.append<wbr>Child(link);
+
+link<wbr>.href = "#" + chunk<wbr>.id;
+link<wbr>.class<wbr>List<wbr>.add("chunk");
+
+const <var>title</var> = chunk<wbr>.query<wbr>Selector("figcaption")<wbr>.clone<wbr>Node(true);
+while (<var>title</var><wbr>.child<wbr>Nodes<wbr>.length > 0) {
+    link<wbr>.append<wbr>Child(title<wbr>.child<wbr>Nodes[0]);
+}</code></pre>
+</figure>
+
+<p>But the index should be in lexicographic order, not document order, so we need to sort the chunks by their names before adding index entries for them.
+
+<figure class=chunk id=populate-index>
+<figcaption>Populate index</figcaption>
+<pre><code>const <var>chunk<wbr>List</var> = document<wbr>.create<wbr>Element("ul");
+index<wbr>.append<wbr>Child(chunk<wbr>List);
+
+const <var>chunk<wbr>Name<wbr>Map</var> = new Map();
+
+for (const <var>chunk</var> of document<wbr>.query<wbr>Selector<wbr>All("figure.chunk")) {
+    chunk<wbr>Name<wbr>Map<wbr>.set(
+        chunk<wbr>.query<wbr>Selector("figcaption").text<wbr>Content,
+        chunk);
+}
+
+for (const <var>chunk<wbr>Name</var> of Array<wbr>.from(chunk<wbr>Name<wbr>Map<wbr>.keys())<wbr>.sort()) {
+    const <var>chunk</var> = chunk<wbr>Name<wbr>Map.get(chunk<wbr>Name);
+    <a class=chunk href=#add-chunk-to-index>Add chunk to index</a>
+}</code></pre>
+</figure>
+
+<h3 id=styling>3.4. Styling chunks</h3>
 
 <p>Besides providing a script that tangles documents, Tangler also includes a minimal stylesheet that makes chunks and chunk references look kind of like they do in <a href=https://www.cs.tufts.edu/~nr/noweb/><code>noweb</code></a>, the literate programming tool I’ve used the most over the years.
 
@@ -323,7 +426,7 @@ figure<wbr>.chunk > pre {
 }</code></pre>
 </figure>
 
-<h3 id=utils>3.4. Utilities</h3>
+<h3 id=utils>3.5. Utilities</h3>
 
 <p>Python uses the multiplication operator to quickly create repetitive strings: <code>'foo'*3</code> returns <code>'foofoofoo'</code>. This is super useful for creating runs of whitespace, which a tangler needs to do to get indentation right. Unfortunately, JavaScript’s <code>*</code> operator doesn’t work on strings this way.
 
@@ -351,7 +454,7 @@ figure<wbr>.chunk > pre {
 }</code></pre>
 </figure>
 
-<h3 id=nodejs>3.5. Tangler works inside <code>Node.js</code> too</h3>
+<h3 id=cli>3.6. Usage from the command line</h3>
 
 <p>It’d be nice if this thing worked from the command line, and not just from inside a browser. Fortunately <a href=https://github.com/jsdom/jsdom><code>jsdom</code></a> makes that a breeze.
 
@@ -366,11 +469,16 @@ const dom = new JSDOM(html);</code></pre>
 
 <p>The rest of Tangler’s code assumes it’s running in a browser. Now that we’ve parsed the <abbr>HTML</abbr> document, we can trick the rest of the script into thinking that’s the case, even though we’re in <code>Node.js</code>.
 
-<p>The only global objects the rest of the script relies on are <a href=https://dom.spec.whatwg.org/#interface-node><code>window.Node</code></a> and <a href=https://dom.spec.whatwg.org/#interface-document><code>window.document</code></a>, so we put references to them on <code>globalThis</code>.
+<p>The only global objects the rest of the script relies on are
+<a href=https://dom.spec.whatwg.org/#interface-node><code>window.Node</code></a>,
+<a href=https://dom.spec.whatwg.org/#interface-documentfragment><code>window.DocumentFragment</code></a>,
+<a href=https://dom.spec.whatwg.org/#interface-document><code>window.document</code></a>,
+so we put references to them on <code>globalThis</code>.
 
 <figure class=chunk id=populate-global>
 <figcaption>Trick the rest of the file into thinking we’re in a browser</figcaption>
 <pre><code>globalThis.Node = dom.window.Node;
+globalThis.DocumentFragment = dom.window.DocumentFragment;
 globalThis.document = dom.window.document;</code></pre>
 </figure>
 
@@ -382,7 +490,7 @@ globalThis.document = dom.window.document;</code></pre>
     Tangler.tangle(document.getElementById(process.argv[3])));</code></pre>
 </figure>
 
-<p>Some of this trickery has to happen before the rest of the script loads. In order to run some code only in <code>Node.js</code>, we look for <a href=https://nodejs.org/api/modules.html#requireid><code>globalThis.require</code></a>, which is defined in <code>Node.js</code> but isn’t part of the web platform.
+<p>Some of this trickery has to happen before the rest of the script loads. In order to run some code only in <code>Node.js</code>, we look for <a href=https://cli.org/api/modules.html#requireid><code>globalThis.require</code></a>, which is defined in <code>Node.js</code> but isn’t part of the web platform.
 
 <figure class=chunk id=nodejs-preamble>
 <figcaption><code>Node.js</code> preamble</figcaption>
@@ -413,7 +521,7 @@ globalThis.document = dom.window.document;</code></pre>
 }</code></pre>
 </figure>
 
-<h3 id=make>3.6 A Makefile to rule them all</h3>
+<h3 id=make>3.7 A Makefile and a README</h3>
 
 <figure class=chunk id=README.md>
 <figcaption>README.md</figcaption>
@@ -421,9 +529,7 @@ globalThis.document = dom.window.document;</code></pre>
 
 Tangler is a literate programming tool whose input format is HTML.
 
-You can simply open [the HTML file](index.html) and click the download
-links, or you can use the provided Makefile. To extract the Makefile,
-run the following:
+You can simply open [the HTML file](index.html) and click the download links, or you can use the provided Makefile. To extract the Makefile, run the following:
 
     node - index.html Makefile &lt; bootstrap/tangle.js > Makefile
 
@@ -434,26 +540,30 @@ After this, a simple `make` should do the right thing.</code></pre>
 <figcaption>Makefile</figcaption>
 <pre><code># -*- makefile-gmake -*-
 
-.PHONY: all clean bootstrap
+.PHONY: all bootstrap clean distclean
 
-PRODUCTS=tangle.js tangle.css tangler.el
 SOURCE=index.html
+CODE=tangle.js tangle.css tangler.el
+PRODUCTS=$(CODE) Makefile README.md
 
-all: $(PRODUCTS) Makefile README.md
+all: $(PRODUCTS)
 
 bootstrap: tangle.js tangle.css
 	cp tangle.js tangle.css bootstrap/
 
 clean:
+	rm -f $(CODE) *~
+
+distclean:
 	rm -f $(PRODUCTS) *~
 
-tangle.js tangle.css tangler.el Makefile README.md: $(SOURCE)
+$(PRODUCTS): $(SOURCE)
 	node - $(SOURCE) $@ &lt; bootstrap/tangle.js > $@</code></pre>
 </figure>
 
 <h2 id=download>4. Download Tangler</h2>
 
-<p>I’m sure you’ve noticed by now that Tangler is self-hosted: this document describing how it works is also its source code. It contains four documents that can be extracted.
+<p>I’m sure you’ve noticed by now that Tangler is self-hosted: this document describing how it works is also its source code. It contains several documents that can be extracted.
 
 <p>The script contains the definition of the <code>Tangler</code> global, the methods that hang off of it, and some <a href=#utils>utility functions</a>:
 
@@ -469,15 +579,16 @@ tangle.js tangle.css tangler.el Makefile README.md: $(SOURCE)
     <a class=chunk href=#is-ancestor>is<wbr>Ancestor()</a>
     <a class=chunk href=#spaces>spaces()</a>
     <a class=chunk href=#tangler-tangle>Tangler<wbr>.tangle()</a>
+    <a class=chunk href=#tangler-create-index>Tangler<wbr>.create<wbr>Chunk<wbr>Index()</a>
     <a class=chunk href=#tangler-create-link>Tangler<wbr>.create<wbr>Chunk<wbr>Download<wbr>Link()</a>
     <a class=chunk href=#nodejs-postamble><code>Node.js</code> postamble</a>
 })();
 </code></pre>
 </figure>
 
-<p>You can read about the stylesheet in <a href=#styling>§3.3. Styling chunks</a>.
+<p>You can read about the stylesheet in <a href=#styling>§3.4. Styling chunks</a>.
 
-<p>In <a href=#emacs>§2.2. Editor support: Emacs</a> I define the <code>tangler-insert-chunk</code> skeleton. I’ve wrapped it into an <abbr title="Emacs Lisp">Elisp</abbr> library below:
+<p>In <a href=#emacs>§2.4. Editor support: Emacs</a> I define the <code>tangler-insert-chunk</code> skeleton. I’ve wrapped it into an <abbr title="Emacs Lisp">Elisp</abbr> library below:
 
 <figure class=chunk id=tangler.el>
 <figcaption><code>tangler.el</code></figcaption>
@@ -497,19 +608,12 @@ tangle.js tangle.css tangler.el Makefile README.md: $(SOURCE)
 (provide 'tangler)
 ;;; tangler.el ends here</code></pre>
 </figure>
+</article>
 
-<p>All of the generated files should get the same copyright notice.
-
-<figure class=chunk id=author>
-<figcaption>Author</figcaption>
-<pre><code>Theresa O'Connor &lt;<a href=mailto:tess@oconnor.cx>tess@oconnor.cx</a>></code></pre>
-</figure>
+<footer><hr>
 <figure class=chunk id=copyright>
 <figcaption>Copyright</figcaption>
 <pre><code>Copyright © 2024  <a class=chunk href=#author>Author</a></code></pre>
 </figure>
+<p><q cite=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>By the way, it’s interesting to try "<code>while(1) ;  xeyes &amp; ; end</code>".</q> — <a href=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>Knuth’s <code>.fvwm2rc</code></a>
 </footer>
-</article>
-<footer>
-<hr>
-<p><q cite=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>By the way, it’s interesting to try "<code>while(1) ;  xeyes &amp; ; end</code>".</q> — <a href=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>Knuth’s <code>.fvwm2rc</code></a></footer>

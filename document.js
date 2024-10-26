@@ -8,6 +8,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }, {
         filename: "tangler.el",
         mediaType: "text/elisp"
+    }, {
+        filename: "Makefile",
+        mediaType: "text/plain"
+    }, {
+        filename: "README.md",
+        mediaType: "text/markdown"
     }];
 
     const list = document.createElement("ul");
@@ -20,4 +26,7 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById(file.filename),
             file.filename, file.mediaType));
     }
+
+    document.querySelector("article").appendChild(
+        Tangler.createChunkIndex("chunk-index"));
 });

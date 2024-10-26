@@ -21,6 +21,10 @@ h1, h2, h3, figcaption {
     font-family: ui-rounded, system-ui, Arial, sans-serif;
 }
 
+h1 {
+    font-size: 2.25em;
+}
+
 code, pre {
     font-family: ui-monospace, "Cascadia Code", monospace;
 }
@@ -128,4 +132,11 @@ figure.example > pre {
 
 figure.chunk > figcaption {
     font-weight: bold;
+}
+
+#chunk-index + ul {
+    columns: 3;
+    font-size: 0.875em;
+    gap: 2ic;
+    list-style-type: none;
 }
