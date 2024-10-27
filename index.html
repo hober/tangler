@@ -575,8 +575,13 @@ PRODUCTS=$(CODE) Makefile README.md
 
 all: $(PRODUCTS)
 
-bootstrap: tangle.js tangle.css
-	cp tangle.js tangle.css bootstrap/
+bootstrap: bootstrap/tangle.js bootstrap/tangle.css
+
+bootstrap/tangle.js: tangle.js
+	cp tangle.js bootstrap/
+
+bootstrap/tangle.css: tangle.css
+	cp tangle.css bootstrap/
 
 clean:
 	rm -f $(CODE) *~
