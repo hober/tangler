@@ -7,6 +7,13 @@
 <script src=bootstrap/tangle.js></script>
 <script src=document.js></script>
 <article>
+<figure>
+<blockquote cite=https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-7.html>
+<p>Programs must be written for people to read, and only incidentally for machines to execute.
+</blockquote>
+<figcaption>— <a href=https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-7.html><cite>Structure and Interpretation of Computer&nbsp;Programs</cite></a></figcaption>
+</figure>
+
 <h1><a href=https://hober.github.io/tangler/ rel=bookmark>Tangler:
 literate programming in <abbr
 title="Hypertext Markup Language">HTML</abbr></a></h1>
@@ -14,13 +21,6 @@ title="Hypertext Markup Language">HTML</abbr></a></h1>
 <figure class=chunk id=author>
 <figcaption>Author</figcaption>
 <pre><code><a href=https://tess.oconnor.cx/>Theresa O'Connor</a> &lt;<a href=mailto:tess@oconnor.cx>tess@oconnor.cx</a>></code></pre>
-</figure>
-
-<figure>
-<blockquote cite=https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-7.html>
-<p>Programs must be written for people to read, and only incidentally for machines to execute.
-</blockquote>
-<figcaption>— <a href=https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-7.html>the preface to <cite>Structure and Interpretation of Computer Programs</cite></a></figcaption>
 </figure>
 
 <h2>Table of Contents</h2>
@@ -183,7 +183,7 @@ title="Hypertext Markup Language">HTML</abbr></a></h1>
 <a class=chunk href=#declare-text>Create a place to accumulate unindented text</a>
 <a class=chunk href=#declare-xref>Remember the &lt;a class=chunk> we’re in, if any</a>
 const walker = document<wbr>.create<wbr>Tree<wbr>Walker(
-    chunk<wbr>.query<wbr>Selector("pre"));
+    chunk<wbr>.query<wbr>Selector(<wbr>"pre"));
 while (walker<wbr>.next<wbr>Node()) {
     switch (walker<wbr>.current<wbr>Node<wbr>.node<wbr>Type) {
     case Node<wbr>.ELEMENT_NODE:
@@ -207,7 +207,7 @@ while (walker<wbr>.next<wbr>Node()) {
 <figcaption>Ignore most elements</figcaption>
 <pre><code>if (walker<wbr>.current<wbr>Node<wbr>.local<wbr>Name != "a")
     continue;
-if (!walker<wbr>.current<wbr>Node<wbr>.class<wbr>List<wbr>.contains("chunk"))
+if (!walker<wbr>.current<wbr>Node<wbr>.class<wbr>List<wbr>.contains(<wbr>"chunk"))
     continue;</code></pre>
 </figure>
 
@@ -239,7 +239,7 @@ if (!walker<wbr>.current<wbr>Node<wbr>.class<wbr>List<wbr>.contains("chunk"))
 
 <figure class=chunk id=ignore-xref-text>
 <figcaption>Ignore text inside <code>&lt;a class=chunk></code></figcaption>
-<pre><code>if (xref && is<wbr>Ancestor(walker<wbr>.current<wbr>Node, xref))
+<pre><code>if (xref && is<wbr>Ancestor(<wbr>walker<wbr>.current<wbr>Node, xref))
     continue;
 else if (xref) // We’re no longer inside xref, so forget it
     xref = null;</code></pre>
@@ -270,7 +270,7 @@ text = "";</code></pre>
 <pre><code>const last = lines[lines<wbr>.length - 1];
 tangled += Tangler<wbr>.tangle(
     document<wbr>.query<wbr>Selector(
-        walker<wbr>.current<wbr>Node<wbr>.get<wbr>Attribute("href")),
+        walker<wbr>.current<wbr>Node<wbr>.get<wbr>Attribute(<wbr>"href")),
     indent + last<wbr>.length);</code></pre>
 </figure>
 
@@ -346,7 +346,7 @@ index<wbr>Entry.append<wbr>Child(link);
 link<wbr>.href = "#" + chunk<wbr>.id;
 link<wbr>.class<wbr>List<wbr>.add("chunk");
 
-const <var>title</var> = chunk<wbr>.query<wbr>Selector("figcaption")<wbr>.clone<wbr>Node(true);
+const <var>title</var> = chunk<wbr>.query<wbr>Selector(<wbr>"figcaption")<wbr>.clone<wbr>Node(true);
 while (<var>title</var><wbr>.child<wbr>Nodes<wbr>.length > 0) {
     link<wbr>.append<wbr>Child(title<wbr>.child<wbr>Nodes[0]);
 }</code></pre>
@@ -361,9 +361,9 @@ index<wbr>.append<wbr>Child(chunk<wbr>List);
 
 const <var>chunk<wbr>Name<wbr>Map</var> = new Map();
 
-for (const <var>chunk</var> of document<wbr>.query<wbr>Selector<wbr>All("figure.chunk")) {
+for (const <var>chunk</var> of document<wbr>.query<wbr>Selector<wbr>All(<wbr>"figure.chunk")) {
     chunk<wbr>Name<wbr>Map<wbr>.set(
-        chunk<wbr>.query<wbr>Selector("figcaption")<wbr>.text<wbr>Content,
+        chunk<wbr>.query<wbr>Selector(<wbr>"figcaption")<wbr>.text<wbr>Content,
         chunk);
 }
 
@@ -394,8 +394,12 @@ ANGLE BRACKET and U+27EB (⟫) MATHEMATICAL RIGHT DOUBLE ANGLE BRACKET.
 
 <figure class=chunk id=style-chunk-xrefs>
 <figcaption>Style chunk references</figcaption>
-<pre><code>a<wbr>.chunk<wbr>::before { content: "⟪"; }
-a<wbr>.chunk<wbr>::after { content: "⟫"; }</code></pre>
+<pre><code>a<wbr>.chunk<wbr>::before {
+    content: "⟪";
+}
+a<wbr>.chunk<wbr>::after {
+    content: "⟫";
+}</code></pre>
 </figure>
 
 <p>Where chunks are defined, their names are followed by U+2254 (≔) COLON
@@ -403,16 +407,24 @@ EQUALS.
 
 <figure class=chunk id=style-chunk-names>
 <figcaption>Style chunk names</figcaption>
-<pre><code>figure<wbr>.chunk > figcaption<wbr>::before { content: "⟪"; }
-figure<wbr>.chunk > figcaption<wbr>::after { content: "⟫≔"; }</code></pre>
+<pre><code>figure<wbr>.chunk > figcaption<wbr>::before {
+    content: "⟪";
+}
+figure<wbr>.chunk > figcaption<wbr>::after {
+    content: "⟫≔";
+}</code></pre>
 </figure>
 
 <p>I don’t want there to be any space between the chunk name and its body. So we remove any margin that might cause there to be space.
 
 <figure class=chunk id=tighten-chunk-spacing>
 <figcaption>Tighten chunk spacing</figcaption>
-<pre><code>figure<wbr>.chunk > figcaption { margin-block-end: 0; }
-figure<wbr>.chunk > pre      { margin-block-start: 0; }</code></pre>
+<pre><code>figure<wbr>.chunk > figcaption {
+    margin-block-end: 0;
+}
+figure<wbr>.chunk > pre {
+    margin-block-start: 0;
+}</code></pre>
 </figure>
 
 <p>Chunk names should be left-aligned. The bodies of chunks should be set in slightly from the chunk name, which should hang a bit left of the main text flow.
@@ -451,7 +463,7 @@ figure<wbr>.chunk > pre {
 <figure class=chunk id=is-ancestor>
 <figcaption><code>is<wbr>Ancestor()</code></figcaption>
 <pre><code>function is<wbr>Ancestor(node, possible<wbr>Ancestor) {
-    return Node<wbr>.<a href=https://dom.spec.whatwg.org/#ref-for-dom-node-document_position_contains>DOCUMENT_POSITION_CONTAINS</a> &
+    return Node<wbr>.<a href=https://dom.spec.whatwg.org/#ref-for-dom-node-document_position_contains>DOCUMENT<wbr>_POSITION<wbr>_CONTAINS</a> &
         node<wbr>.compare<wbr>Document<wbr>Position(possible<wbr>Ancestor);
 }</code></pre>
 </figure>
@@ -617,5 +629,5 @@ $(PRODUCTS): $(SOURCE)
 <figcaption>Copyright</figcaption>
 <pre><code>Copyright © 2024  <a class=chunk href=#author>Author</a></code></pre>
 </figure>
-<p><q cite=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>By the way, it’s interesting to try "<code>while(1) ;  xeyes &amp; ; end</code>".</q> — <a href=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>Knuth’s <code>.fvwm2rc</code></a>
+<p><q cite=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>By the way, it’s interesting to try "<code>while(1) ;  xeyes &amp; ; end</code>".</q> —&nbsp;<a href=https://www-cs-faculty.stanford.edu/~knuth/programs/.fvwm2rc>Knuth’s <code>.fvwm2rc</code></a>
 </footer>

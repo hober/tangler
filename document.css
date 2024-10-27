@@ -2,6 +2,18 @@ abbr {
     text-decoration: none;
 }
 
+blockquote, figure {
+    margin-inline: 1ic;
+}
+
+:is(blockquote, em, i, q),
+:is(blockquote, em, i, q) :is(blockquote, em, i, q) :is(blockquote, em, i, q) {
+    font-style: italic;
+}
+:is(blockquote, em, i, q) :is(blockquote, em, i, q) {
+    font-style: normal;
+}
+
 html {
     margin: 0;
     padding: 0;
@@ -13,6 +25,7 @@ html {
     background-color: var(--bg-color);
     color: var(--fg-color);
     font-family: system-ui, Arial, sans-serif;
+    font-size: 125%;
     font-size-adjust: from-font;
     text-underline-position: from-font right;
     line-height: 1.5;
@@ -23,7 +36,7 @@ h1, h2, h3, figcaption {
 }
 
 h1 {
-    font-size: 2.25em;
+    font-size: 1.75em;
 }
 
 code, pre {
@@ -48,7 +61,7 @@ pre {
     }
 }
 
-@media screen {
+@media screen and (min-width: 600px) {
     html {
         font-size: 150%;
     }
@@ -136,8 +149,15 @@ figure.chunk > figcaption {
 }
 
 #chunk-index + ul {
-    columns: 3;
+    columns: 2;
     font-size: 0.875em;
     gap: 2ic;
     list-style-type: none;
+    padding-inline-start: 0;
+}
+
+@media (min-width: 600px) {
+    #chunk-index + ul {
+        columns: 3;
+    }
 }
