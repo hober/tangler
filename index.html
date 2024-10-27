@@ -9,7 +9,7 @@
 <article>
 <figure>
 <blockquote cite=https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-7.html>
-<p>Programs must be written for people to read, and only incidentally for machines to execute.
+<p>Programs must be written for people to read, and only incidentally for machines to&nbsp;execute.
 </blockquote>
 <figcaption>— <a href=https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-7.html><cite>Structure and Interpretation of Computer&nbsp;Programs</cite></a></figcaption>
 </figure>
@@ -39,7 +39,7 @@ title="Hypertext Markup Language">HTML</abbr></a></h1>
     <li><a href=#styling>Styling chunks</a>
     <li><a href=#utils>Utilities</a>
     <li><a href=#cli>Usage from the command line</a>
-    <li><a href=#make>A Makefile and a README</a></ol>
+    <li><a href=#make>A <code>Makefile</code> and a README</a></ol>
   <li><a href=#download>Download Tangler</a>
   <li><a href=#chunk-index>Chunk index</a>
 </ol>
@@ -535,23 +535,31 @@ globalThis.document = dom.window.document;</code></pre>
 }</code></pre>
 </figure>
 
-<h3 id=make>3.7 A Makefile and a README</h3>
+<h3 id=make>3.7 A <code>Makefile</code> and a README</h3>
+
+<p>Tangler’s repository is <a href=https://github.com/hober/tangler>on GitHub</a>, so here’s a <code>README.md</code> that shows up in GitHub’s <abbr title="user interface">UI</abbr>:
 
 <figure class=chunk id=README.md>
-<figcaption>README.md</figcaption>
+<figcaption><code>README.md</code></figcaption>
 <pre><code># Tangler
 
 Tangler is a literate programming tool whose input format is HTML.
 
-You can simply open [the HTML file](<a href=https://hober.github.io/tangler/>https://<wbr>hober<wbr>.github<wbr>.io/<wbr>tangler/</a>) and click the download links, or you can use the provided Makefile. To extract the Makefile, run the following:
+Read all about it at <a href=https://hober.github.io/tangler/>https://<wbr>hober<wbr>.github<wbr>.io/<wbr>tangler/</a>.
+
+To extract Tangler’s source code from  [the HTML file](<a href=https://hober.github.io/tangler/>https://<wbr>hober<wbr>.github<wbr>.io/<wbr>tangler/</a>), you can simply [download the source files](<a href=https://hober.github.io/tangler/index.html#download>https://<wbr>hober<wbr>.github<wbr>.io/<wbr>tangler/<wbr>index.html<wbr>#download</a>), or you can check out this repository and extract the Makefile with the following command:
 
     node - index.html Makefile &lt; bootstrap/tangle.js > Makefile
 
 After this, a simple `make` should do the right thing.</code></pre>
 </figure>
 
+<aside><p><abbr lang=la>N.B.</abbr> Tangler doesn’t yet care about different kinds of whitespace; it unconditionally uses spaces. This is only right and proper, of course, because <q cite=https://www.jwz.org/doc/tabs-vs-spaces.html>the ASCII #9 TAB character [should] never appear in disk files[.]</q> [<a href=https://www.jwz.org/doc/tabs-vs-spaces.html><abbr title="Jamie Zawinski">JWZ</abbr></a>]
+<p>This only becomes a problem when you try to produce a Makefile with Tangler. I really ought to fix this. It’s on my To Do list.
+</aside>
+
 <figure class=chunk id=Makefile>
-<figcaption>Makefile</figcaption>
+<figcaption><code>Makefile</code></figcaption>
 <pre><code># -*- makefile-gmake -*-
 
 .PHONY: all bootstrap clean distclean
