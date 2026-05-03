@@ -161,3 +161,41 @@ figure.chunk > figcaption {
         columns: 3;
     }
 }
+
+del, ins {
+    color: black;
+    text-decoration: none;
+}
+
+:is(del, ins):has(> p) {
+    display: block;
+}
+
+ins { background-color: #efe; }
+ins > mark   {
+    background-color: #afa;
+    color: inherit;
+}
+
+del { background-color: #fee; }
+del > mark   {
+    background-color: #faa;
+    color: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+    ins, del { color: white; }
+    ins { background-color: #030; }
+    ins > mark   {
+        background-color: #060;
+    }
+
+    del { background-color: #300; }
+    del > mark   {
+        background-color: #600;
+    }
+}
+
+li.unnumbered {
+    list-style-type: none;
+}
